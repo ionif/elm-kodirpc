@@ -5158,20 +5158,21 @@ var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $author$project$WSDecoder$Response = function (result) {
 	return {result: result};
 };
-var $author$project$WSDecoder$ParamsResponse = function (data) {
-	return {data: data};
-};
-var $author$project$WSDecoder$Data = F2(
+var $author$project$WSDecoder$ParamsResponse = F2(
 	function (item, player) {
 		return {item: item, player: player};
 	});
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $author$project$WSDecoder$Item = F2(
 	function (id, itype) {
 		return {id: id, itype: itype};
 	});
 var $elm$json$Json$Decode$int = _Json_decodeInt;
-var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
-var $elm$json$Json$Decode$field = _Json_decodeField;
 var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
 	function (key, valDecoder, decoder) {
 		return A2(
@@ -5180,11 +5181,10 @@ var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
 			decoder);
 	});
 var $elm$json$Json$Decode$string = _Json_decodeString;
-var $author$project$WSDecoder$typeDecoder = A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string);
 var $author$project$WSDecoder$itemDecoder = A3(
 	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 	'type',
-	$author$project$WSDecoder$typeDecoder,
+	$elm$json$Json$Decode$string,
 	A3(
 		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 		'id',
@@ -5203,31 +5203,32 @@ var $author$project$WSDecoder$playerDecoder = A3(
 		'playerid',
 		$elm$json$Json$Decode$int,
 		$elm$json$Json$Decode$succeed($author$project$WSDecoder$PlayerObj)));
-var $author$project$WSDecoder$dataDecoder = A3(
-	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-	'player',
-	$author$project$WSDecoder$playerDecoder,
-	A3(
-		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-		'item',
-		$author$project$WSDecoder$itemDecoder,
-		$elm$json$Json$Decode$succeed($author$project$WSDecoder$Data)));
-var $author$project$WSDecoder$paramsResponseDecoder = A3(
-	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-	'data',
-	$author$project$WSDecoder$dataDecoder,
-	$elm$json$Json$Decode$succeed($author$project$WSDecoder$ParamsResponse));
+var $author$project$WSDecoder$paramsDecoder = A2(
+	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
+	A2(
+		$elm$json$Json$Decode$at,
+		_List_fromArray(
+			['data', 'player']),
+		$author$project$WSDecoder$playerDecoder),
+	A2(
+		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
+		A2(
+			$elm$json$Json$Decode$at,
+			_List_fromArray(
+				['data', 'item']),
+			$author$project$WSDecoder$itemDecoder),
+		$elm$json$Json$Decode$succeed($author$project$WSDecoder$ParamsResponse)));
 var $author$project$WSDecoder$responseDecoder = A3(
 	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 	'params',
-	$author$project$WSDecoder$paramsResponseDecoder,
+	$author$project$WSDecoder$paramsDecoder,
 	$elm$json$Json$Decode$succeed($author$project$WSDecoder$Response));
 var $author$project$WSDecoder$stringDecoder = A2($elm$json$Json$Decode$field, 'result', $elm$json$Json$Decode$string);
 var $author$project$Main$decodeWS = function (message) {
 	var _v0 = A2($elm$json$Json$Decode$decodeString, $author$project$WSDecoder$responseDecoder, message);
 	if (_v0.$ === 'Ok') {
 		var wsMessage = _v0.a;
-		return $author$project$Main$Recv(wsMessage.result.data.item.itype);
+		return $author$project$Main$Recv(wsMessage.result.item.itype);
 	} else {
 		var err = _v0.a;
 		var _v1 = A2($elm$json$Json$Decode$decodeString, $author$project$WSDecoder$stringDecoder, message);
@@ -5236,7 +5237,7 @@ var $author$project$Main$decodeWS = function (message) {
 			return $author$project$Main$Recv(wsMessage);
 		} else {
 			var err2 = _v1.a;
-			return $author$project$Main$Recv('err2');
+			return $author$project$Main$Recv(message);
 		}
 	}
 };
@@ -5338,10 +5339,6 @@ var $elm$html$Html$Events$stopPropagationOn = F2(
 			$elm$virtual_dom$VirtualDom$on,
 			event,
 			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
 	});
 var $elm$html$Html$Events$targetValue = A2(
 	$elm$json$Json$Decode$at,

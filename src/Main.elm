@@ -85,13 +85,13 @@ update msg model =
 decodeWS message = 
     case D.decodeString responseDecoder message of 
       Ok wsMessage -> 
-          Recv wsMessage.result.data.item.itype
+          Recv wsMessage.result.item.itype
       Err err ->
           case D.decodeString stringDecoder message of 
-            Ok wsMessage -> 
+            Ok wsMessage ->
               Recv wsMessage
             Err err2 ->
-              Recv "err2"
+              Recv message
 
 -- Subscribe to the `messageReceiver` port to hear about messages coming in
 -- from JS. Check out the index.html file to see how this is hooked up to a

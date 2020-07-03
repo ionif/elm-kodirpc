@@ -1,7 +1,7 @@
 module WSDecoder exposing (responseDecoder, stringDecoder)
 
-import Json.Decode as Decode exposing (Decoder, int, string)
-import Json.Decode.Pipeline exposing (custom, required)
+import Json.Decode as Decode exposing (Decoder, int, string, at)
+import Json.Decode.Pipeline exposing (custom, required, optional)
 
 -- Item
 
@@ -17,23 +17,7 @@ itemDecoder : Decoder Item
 itemDecoder =
     Decode.succeed Item
         |> required "id" int
-        |> required "type" typeDecoder
-
-typeDecoder : Decoder String 
-typeDecoder =
-        Decode.field "type" Decode.string
-
--- Data
-
-type alias Data =
-    { item : Item
-    , player : PlayerObj }
-
-dataDecoder : Decoder Data
-dataDecoder =
-    Decode.succeed Data
-        |> required "item" itemDecoder
-        |> required "player" playerDecoder
+        |> required "type" string
 
 -- Player
 
@@ -59,18 +43,21 @@ speedDecoder =
 -- Params Response
 
 type alias ParamsResponse =
-    { data : Data
+    { item : Item
+    , player : PlayerObj
     }
 
-paramsResponseDecoder : Decoder ParamsResponse
-paramsResponseDecoder =
+paramsDecoder : Decoder ParamsResponse
+paramsDecoder =
     Decode.succeed ParamsResponse
-        |> required "data" dataDecoder --custom (at [ "data", "item" ] itemDecoder)
+        |> custom (at [ "data", "item" ] itemDecoder)
+        |> custom (at [ "data", "player" ] playerDecoder)
 
 responseDecoder : Decoder Response
 responseDecoder =
     Decode.succeed Response
-        |> required "params" paramsResponseDecoder
+        |> required "params" paramsDecoder
+        --|> optional "result" resultDecoder
 
 type alias Response =
     { result : ParamsResponse }
