@@ -1,22 +1,20 @@
-# WebSockets - [Live Demo](https://ellie-app.com/8yYgw7y7sM2a1)
+# elm-kodirpc
 
-This is a minimal example of how to connect to a WebSocket. It connects to `wss://echo.websocket.org` which just repeats whatever you say.
+This is a minimal example of how to connect to a websocket and decode responses. The decoder is written to handle Kodi JSON-RPC responses. It uses port 9090 by default.
 
-![Demo](demo.gif)
+## Building and running locally
 
-The important code lives in `src/Main.elm` and in `index.html` with comments!
-
-
-## Building Locally
-
-Run the following commands:
-
-```bash
-git clone https://github.com/elm-community/js-integration-examples.git
-cd js-integration-examples/websockets
-
+```
 elm make src/Main.elm --output=elm.js
-open index.html
+elm reactor
 ```
 
-Some terminals may not have an `open` command, in which case you should open the index.html file in your browser another way.
+## Development task list
+- [X] Basic string decoder
+  - {"result" : String}
+- [ ] JSON Introspect decoder
+  - handles Introspect calls
+- [ ] params decoder
+  - {"params" : Object}
+- [ ] List decoder
+  - {"result" : [{},{}]}
