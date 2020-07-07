@@ -1,4 +1,4 @@
-module WSDecoder exposing (responseDecoder, stringDecoder)
+module WSDecoder exposing (paramsResponseDecoder, stringDecoder, Params)
 
 import Json.Decode as Decode exposing (Decoder, int, string, at, maybe)
 import Json.Decode.Pipeline exposing (custom, required, optional)
@@ -60,31 +60,42 @@ playerTypeDecoder : Decoder PlayerType
 playerTypeDecoder =
   Decode.string |> Decode.andThen (fromResult << parsePlayerType)
 
-type alias PlayerObj =
+{-type alias PlayerObj =
     { playerid : Int
     , speed : Int
     , playertype : Maybe PlayerType 
     , ptype : Maybe PType
-    }
+    }-}
 
-playerDecoder : Decoder PlayerObj
-playerDecoder =
-    Decode.succeed PlayerObj
+--variants A and B have different shape
+type PlayerObj = A Int Int | B Int PlayerType PType 
+
+playerSpdDecoder : Decoder PlayerObj
+playerSpdDecoder =
+    Decode.succeed A
         |> required "playerid" int
         |> required "speed" int
-        |> optional "playertype" (maybe playerTypeDecoder) (Just Internal)
-        |> optional "type" (maybe pTypeDecoder) (Just Audio)
 
+playerwoSpdDecoder : Decoder PlayerObj
+playerwoSpdDecoder =
+    Decode.succeed B
+        |> required "playerid" int
+        |> required "playertype" playerTypeDecoder
+        |> required "type" pTypeDecoder 
+
+playerDecoder : Decoder PlayerObj
+playerDecoder = 
+    Decode.oneOf [playerSpdDecoder, playerwoSpdDecoder]
 -- Params Response
 
-type alias ParamsResponse =
+type alias Params =
     { item : Item
     , player : PlayerObj
     }
 
-paramsDecoder : Decoder ParamsResponse
+paramsDecoder : Decoder Params
 paramsDecoder =
-    Decode.succeed ParamsResponse
+    Decode.succeed Params
         |> custom (at [ "data", "item" ] itemDecoder)
         |> custom (at [ "data", "player" ] playerDecoder)
 
@@ -98,13 +109,15 @@ paramsDecoder =
 -- Response
 
 type alias Response =
-    { params : ParamsResponse }
+    { params : Params }
 
-responseDecoder : Decoder Response
-responseDecoder =
+paramsResponseDecoder : Decoder Response
+paramsResponseDecoder =
     Decode.succeed Response
         |> required "params" paramsDecoder
         --|> optional "result" resultDecoder
+
+--resultResponseDecoder : Decoder Result
 
 stringDecoder : Decoder String 
 stringDecoder =

@@ -5,7 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as D
-import WSDecoder exposing (responseDecoder, stringDecoder)
+import WSDecoder exposing (paramsResponseDecoder, stringDecoder, Params)
 
 -- MAIN
 
@@ -46,6 +46,7 @@ type Msg
   | PlayPause
   | Skip
   | Recv String
+  | RecvParams String
 
 
 -- Use the `sendMessage` port when someone presses ENTER or clicks
@@ -80,12 +81,23 @@ update msg model =
       , Cmd.none
       )
 
+    RecvParams message ->
+      {-case message.params.player of
+        A a ->
+          ( { model | messages = model.messages ++ [message] } --wsMessage.params.item.itype
+          , Cmd.none
+          )
+        B b ->-}
+      ( { model | messages = model.messages ++ [message] } --wsMessage.params.item.itype
+      , Cmd.none
+      )
+
 
 -- SUBSCRIPTIONS
 decodeWS message = 
-    case D.decodeString responseDecoder message of 
-      Ok wsMessage -> 
-          Recv message --wsMessage.params.item.itype
+    case D.decodeString paramsResponseDecoder message of 
+      Ok wsMessage ->
+          RecvParams message
       Err err ->
           case D.decodeString stringDecoder message of 
             Ok wsMessage ->
