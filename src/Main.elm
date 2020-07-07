@@ -85,7 +85,7 @@ update msg model =
 decodeWS message = 
     case D.decodeString responseDecoder message of 
       Ok wsMessage -> 
-          Recv wsMessage.result.item.itype
+          Recv message --wsMessage.params.item.itype
       Err err ->
           case D.decodeString stringDecoder message of 
             Ok wsMessage ->
