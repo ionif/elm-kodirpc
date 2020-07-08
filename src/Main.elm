@@ -5,7 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as D
-import WSDecoder exposing (paramsResponseDecoder, stringDecoder, Params)
+import WSDecoder exposing (paramsResponseDecoder, resultResponseDecoder, Params, ResultResponse(..))
 
 -- MAIN
 
@@ -46,7 +46,8 @@ type Msg
   | PlayPause
   | Skip
   | Recv String
-  | RecvParams String
+  | ReceiveParamsResponse String
+  | ReceiveResultResponse ResultResponse
 
 
 -- Use the `sendMessage` port when someone presses ENTER or clicks
@@ -81,27 +82,38 @@ update msg model =
       , Cmd.none
       )
 
-    RecvParams message ->
+    ReceiveParamsResponse params ->
       {-case message.params.player of
         A a ->
           ( { model | messages = model.messages ++ [message] } --wsMessage.params.item.itype
           , Cmd.none
           )
         B b ->-}
-      ( { model | messages = model.messages ++ [message] } --wsMessage.params.item.itype
+      ( { model | messages = model.messages ++ [params] } --wsMessage.params.item.itype
       , Cmd.none
       )
+
+    ReceiveResultResponse result ->
+      case result of 
+        ResultA str ->  
+          ( { model | messages = model.messages ++ [str] }
+          , Cmd.none
+          )
+        ResultB playerObjects ->  
+          ( { model | messages = model.messages ++ ["message"] }
+          , Cmd.none
+          )
 
 
 -- SUBSCRIPTIONS
 decodeWS message = 
     case D.decodeString paramsResponseDecoder message of 
       Ok wsMessage ->
-          RecvParams message
+          ReceiveParamsResponse message
       Err err ->
-          case D.decodeString stringDecoder message of 
-            Ok wsMessage ->
-              Recv wsMessage
+          case D.decodeString resultResponseDecoder message of 
+            Ok resultMessage ->
+              ReceiveResultResponse resultMessage
             Err err2 ->
               Recv message
 

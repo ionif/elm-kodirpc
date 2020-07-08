@@ -1,6 +1,6 @@
-module WSDecoder exposing (paramsResponseDecoder, stringDecoder, Params)
+module WSDecoder exposing (paramsResponseDecoder, resultResponseDecoder, Params, ResultResponse(..))
 
-import Json.Decode as Decode exposing (Decoder, int, string, at, maybe)
+import Json.Decode as Decode exposing (Decoder, int, string, at, maybe, list)
 import Json.Decode.Pipeline exposing (custom, required, optional)
 
 -----------------------
@@ -72,7 +72,7 @@ type PlayerObj = A Int Int | B Int PlayerType PType
 
 playerSpdDecoder : Decoder PlayerObj
 playerSpdDecoder =
-    Decode.succeed A
+    Decode.succeed A 
         |> required "playerid" int
         |> required "speed" int
 
@@ -117,15 +117,22 @@ paramsResponseDecoder =
         |> required "params" paramsDecoder
         --|> optional "result" resultDecoder
 
---resultResponseDecoder : Decoder Result
+type ResultResponse = ResultA String | ResultB (List PlayerObj)
 
-stringDecoder : Decoder String 
+resultResponseDecoder : Decoder ResultResponse
+resultResponseDecoder =
+    Decode.oneOf [stringDecoder, listDecoder]
+
+stringDecoder : Decoder ResultResponse
 stringDecoder =
-        Decode.field "result" Decode.string
+        Decode.succeed ResultA
+            |> required "result" string
 
-listDecoder : Decoder (List PlayerObj)
+listDecoder : Decoder ResultResponse
 listDecoder =
-        Decode.field "result" (Decode.list playerDecoder)
+        Decode.succeed ResultB
+            |> required "result" (list playerDecoder)
+
 {-resultsDecoder : Decoder (List Result)
 resultsDecoder =
   Decode.oneOf
