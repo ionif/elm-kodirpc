@@ -5,7 +5,9 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as D
-import WSDecoder exposing (PlayerObj(..), paramsResponseDecoder, resultResponseDecoder, Params, ResultResponse(..))
+import WSDecoder exposing (PlayerObj(..), PType(..), paramsResponseDecoder, resultResponseDecoder, ResultResponse(..))
+import Request exposing (Params, Property(..), propertyToStr, paramsToObj, request)
+import Method exposing (Method(..), methodToStr, strToMethod)
 
 -- MAIN
 
@@ -44,6 +46,7 @@ init flags =
 type Msg
   = DraftChanged String
   | Send
+  | Request Method (Maybe Params)
   | PlayPause
   | Skip
   | Recv String
@@ -67,6 +70,17 @@ update msg model =
       ( { model | draft = "" }
       , sendMessage model.draft
       )
+
+    Request method params ->
+      case params of
+          Nothing ->
+              ( model
+              , sendMessage (request method Nothing)
+              )
+          Just param ->
+              ( model
+              , sendMessage (request method (Just {playerid = param.playerid, properties = param.properties}))
+              )
 
     PlayPause ->
       ( { model | draft = "" }
@@ -102,7 +116,16 @@ update msg model =
           )
         ResultB playerObjects ->  
           ( { model | players = playerObjects }
-          , Cmd.none
+            --chain messages, once we get players we gotta see what's playing
+            --{"jsonrpc": "2.0", "method": "Player.GetItem", "params": { "properties": ["title", "album", "artist", "duration", "thumbnail", "file", "fanart", "streamdetails"], "playerid": 0 }, "id": "AudioGetItem"}
+          , sendMessage 
+              (request Player_GetItem 
+                  ( Just 
+                    { playerid = (Just 0)
+                    , properties = (Just [Title, Album, Artist, Duration, Thumbnail])
+                    }
+                  )
+              )
           )
 
 
@@ -144,7 +167,11 @@ view model =
               PlayerA playerid speed ->
                 li [] [ text ((String.fromInt playerid) ++ ", " ++ (String.fromInt speed)) ]
               PlayerB playerid playertype ptype ->
-                li [] [ text (String.fromInt playerid) ]
+                case ptype of
+                  Picture ->
+                    li [] [ text ("Picture, " ++ (String.fromInt playerid)) ]
+                  Audio ->
+                    li [] [ text ("Audio, " ++ (String.fromInt playerid)) ]
           ) 
         model.players)
     , input
