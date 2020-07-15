@@ -1,4 +1,4 @@
-module WSDecoder exposing (paramsResponseDecoder, resultResponseDecoder, Params, ResultResponse(..))
+module WSDecoder exposing (PlayerObj(..), paramsResponseDecoder, resultResponseDecoder, Params, ResultResponse(..))
 
 import Json.Decode as Decode exposing (Decoder, int, string, at, maybe, list)
 import Json.Decode.Pipeline exposing (custom, required, optional)

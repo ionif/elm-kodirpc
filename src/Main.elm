@@ -5,7 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as D
-import WSDecoder exposing (paramsResponseDecoder, resultResponseDecoder, Params, ResultResponse(..))
+import WSDecoder exposing (PlayerObj(..), paramsResponseDecoder, resultResponseDecoder, Params, ResultResponse(..))
 
 -- MAIN
 
@@ -28,12 +28,13 @@ port messageReceiver : (String -> msg) -> Sub msg
 type alias Model =
   { draft : String
   , messages : List String
+  , players : List PlayerObj
   }
 
 
 init : () -> ( Model, Cmd Msg )
 init flags =
-  ( { draft = "", messages = [] }
+  ( { draft = "", messages = [], players = [] }
   , Cmd.none
   )
 
@@ -100,7 +101,7 @@ update msg model =
           , Cmd.none
           )
         ResultB playerObjects ->  
-          ( { model | messages = model.messages ++ ["message"] }
+          ( { model | players = playerObjects }
           , Cmd.none
           )
 
@@ -136,6 +137,16 @@ view model =
     [ h1 [] [ text "Echo Chat" ]
     , ul []
         (List.map (\msg -> li [] [ text msg ]) model.messages)
+    , ul []
+        (List.map 
+          (\player -> 
+            case player of
+              PlayerA playerid speed ->
+                li [] [ text ((String.fromInt playerid) ++ ", " ++ (String.fromInt speed)) ]
+              PlayerB playerid playertype ptype ->
+                li [] [ text (String.fromInt playerid) ]
+          ) 
+        model.players)
     , input
         [ type_ "text"
         , placeholder "Draft"
