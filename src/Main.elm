@@ -5,7 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as D
-import WSDecoder exposing (PlayerObj(..), PType(..), paramsResponseDecoder, resultResponseDecoder, ResultResponse(..))
+import WSDecoder exposing (ParamsResponse, Item, PlayerObj(..), PType(..), paramsResponseDecoder, resultResponseDecoder, ResultResponse(..))
 import Request exposing (Params, Property(..), propertyToStr, paramsToObj, request)
 import Method exposing (Method(..), methodToStr, strToMethod)
 
@@ -31,15 +31,14 @@ type alias Model =
   { draft : String
   , messages : List String
   , players : List PlayerObj
+  , currentlyPlaying : ParamsResponse
   }
-
 
 init : () -> ( Model, Cmd Msg )
 init flags =
-  ( { draft = "", messages = [], players = [] }
+  ( { draft = "", messages = [], players = [], currentlyPlaying = ParamsResponse (Item 0 "") (PlayerA 0 0) }
   , Cmd.none
   )
-
 
 -- UPDATE
 
@@ -50,7 +49,7 @@ type Msg
   | PlayPause
   | Skip
   | Recv String
-  | ReceiveParamsResponse String
+  | ReceiveParamsResponse ParamsResponse
   | ReceiveResultResponse ResultResponse
 
 
@@ -98,13 +97,7 @@ update msg model =
       )
 
     ReceiveParamsResponse params ->
-      {-case message.params.player of
-        A a ->
-          ( { model | messages = model.messages ++ [message] } --wsMessage.params.item.itype
-          , Cmd.none
-          )
-        B b ->-}
-      ( { model | messages = model.messages ++ [params] } --wsMessage.params.item.itype
+      ( { model | currentlyPlaying = params }
       , Cmd.none
       )
 
@@ -132,8 +125,8 @@ update msg model =
 -- SUBSCRIPTIONS
 decodeWS message = 
     case D.decodeString paramsResponseDecoder message of 
-      Ok wsMessage ->
-          ReceiveParamsResponse message
+      Ok paramsMessage ->
+          ReceiveParamsResponse paramsMessage
       Err err ->
           case D.decodeString resultResponseDecoder message of 
             Ok resultMessage ->
@@ -174,6 +167,9 @@ view model =
                     li [] [ text ("Audio, " ++ (String.fromInt playerid)) ]
           ) 
         model.players)
+    , li [] [text ("Currently playing: id: " ++ String.fromInt(model.currentlyPlaying.item.id) ++ 
+               " type: " ++ model.currentlyPlaying.item.itype
+              )]
     , input
         [ type_ "text"
         , placeholder "Draft"

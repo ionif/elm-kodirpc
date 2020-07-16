@@ -1,4 +1,4 @@
-module WSDecoder exposing (PlayerObj(..), PType(..), paramsResponseDecoder, resultResponseDecoder, Params, ResultResponse(..))
+module WSDecoder exposing (ParamsResponse, Item, PlayerObj(..), PType(..), paramsResponseDecoder, resultResponseDecoder, ResultResponse(..))
 
 import Json.Decode as Decode exposing (Decoder, int, string, at, maybe, list)
 import Json.Decode.Pipeline exposing (custom, required, optional)
@@ -90,16 +90,16 @@ playerDecoder =
 
 -- Params Response
 
-type alias Params =
+type alias ParamsResponse =
     { item : Item
     , player : PlayerObj
     }
 
-paramsDecoder : Decoder Params
-paramsDecoder =
-    Decode.succeed Params
-        |> custom (at [ "data", "item" ] itemDecoder)
-        |> custom (at [ "data", "player" ] playerDecoder)
+paramsResponseDecoder : Decoder ParamsResponse
+paramsResponseDecoder =
+    Decode.succeed ParamsResponse
+        |> custom (at [ "params", "data", "item" ] itemDecoder)
+        |> custom (at [ "params", "data", "player" ] playerDecoder)
 
 -- end "params"
 
@@ -158,16 +158,6 @@ firstFieldAs decoder =
 -}
 
 -- end "result"
-
--- Response
-
-type alias Response =
-    { params : Params }
-
-paramsResponseDecoder : Decoder Response
-paramsResponseDecoder =
-    Decode.succeed Response
-        |> required "params" paramsDecoder
 
 {-resultsDecoder : Decoder (List Result)
 resultsDecoder =
