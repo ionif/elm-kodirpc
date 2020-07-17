@@ -5,7 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as D
-import WSDecoder exposing (ParamsResponse, Item, PlayerObj(..), PType(..), paramsResponseDecoder, resultResponseDecoder, ResultResponse(..))
+import WSDecoder exposing (ItemDetails, ParamsResponse, Item, PlayerObj(..), PType(..), paramsResponseDecoder, resultResponseDecoder, ResultResponse(..))
 import Request exposing (Params, Property(..), propertyToStr, paramsToObj, request)
 import Method exposing (Method(..), methodToStr, strToMethod)
 
@@ -31,12 +31,12 @@ type alias Model =
   { draft : String
   , messages : List String
   , players : List PlayerObj
-  , currentlyPlaying : ParamsResponse
+  , currentlyPlaying : ItemDetails
   }
 
 init : () -> ( Model, Cmd Msg )
 init flags =
-  ( { draft = "", messages = [], players = [], currentlyPlaying = ParamsResponse (Item 0 "") (PlayerA 0 0) }
+  ( { draft = "", messages = [], players = [], currentlyPlaying = ItemDetails "" 0 ""}
   , Cmd.none
   )
 
@@ -78,7 +78,7 @@ update msg model =
               )
           Just param ->
               ( model
-              , sendMessage (request method (Just {playerid = param.playerid, properties = param.properties}))
+              , sendMessage (request method (Just {playerid = param.playerid, songid = Nothing, properties = param.properties}))
               )
 
     PlayPause ->
@@ -97,8 +97,10 @@ update msg model =
       )
 
     ReceiveParamsResponse params ->
-      ( { model | currentlyPlaying = params }
-      , Cmd.none
+      ( { model | draft = "" }
+        --{"jsonrpc":"2.0","method":"AudioLibrary.GetSongDetails","params":{"songid":1, "properties":["file"]},"id":1}
+        --{"jsonrpc": "2.0", "method": "Player.GetItem, params": { "properties": ["label", "duration", "id", "thumbnail"], "playerid": 0 }, "id": "AudioGetItem"}
+      , sendMessage """{"jsonrpc": "2.0", "method": "Player.GetItem", "params": { "properties": ["title", "duration", "thumbnail"], "playerid": 0 }, "id": "AudioGetItem"}"""
       )
 
     ReceiveResultResponse result ->
@@ -115,11 +117,16 @@ update msg model =
               (request Player_GetItem 
                   ( Just 
                     { playerid = (Just 0)
+                    , songid = Nothing
                     , properties = (Just [Title, Album, Artist, Duration, Thumbnail])
                     }
                   )
               )
           )
+        ResultC item ->
+          ( { model | currentlyPlaying = item}
+          , Cmd.none)
+
 
 
 -- SUBSCRIPTIONS
@@ -167,8 +174,8 @@ view model =
                     li [] [ text ("Audio, " ++ (String.fromInt playerid)) ]
           ) 
         model.players)
-    , li [] [text ("Currently playing: id: " ++ String.fromInt(model.currentlyPlaying.item.id) ++ 
-               " type: " ++ model.currentlyPlaying.item.itype
+    , li [] [text ("Currently playing: " ++ model.currentlyPlaying.title ++ 
+               " duration: " ++ String.fromInt(model.currentlyPlaying.duration)
               )]
     , input
         [ type_ "text"
