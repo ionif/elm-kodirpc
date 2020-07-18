@@ -157,7 +157,7 @@ subscriptions _ =
 view : Model -> Html Msg
 view model =
   div []
-    [ h1 [] [ text "Echo Chat" ]
+    [ h1 [] [ text "elm-kodirpc" ]
     , ul []
         (List.map (\msg -> li [] [ text msg ]) model.messages)
     , ul []
