@@ -2,6 +2,8 @@
 
 This is a minimal example of how to connect to a websocket and decode responses. The decoder is written to handle Kodi JSON-RPC responses. It uses port 9090 by default.
 
+![demo](https://github.com/ionif/elm-kodirpc/blob/master/demo.gif)
+
 ## Building and running locally
 
 ```
