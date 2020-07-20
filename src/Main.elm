@@ -5,7 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as D
-import WSDecoder exposing (ItemDetails, ParamsResponse, Item, PlayerObj(..), PType(..), paramsResponseDecoder, resultResponseDecoder, ResultResponse(..))
+import WSDecoder exposing (Song, ItemDetails, ParamsResponse, Item, PlayerObj(..), PType(..), paramsResponseDecoder, resultResponseDecoder, ResultResponse(..))
 import Request exposing (Params, Property(..), propertyToStr, paramsToObj, request)
 import Method exposing (Method(..), methodToStr, strToMethod)
 
@@ -126,7 +126,14 @@ update msg model =
         ResultC item ->
           ( { model | currentlyPlaying = item}
           , Cmd.none)
+        ResultD songlist ->
+          ( { model | messages = model.messages ++ List.map songname songlist }
+          , Cmd.none
+          )
 
+songname : Song -> String
+songname song =
+  song.label
 
 
 -- SUBSCRIPTIONS
