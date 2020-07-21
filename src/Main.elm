@@ -5,7 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as D
-import WSDecoder exposing (Song, ItemDetails, ParamsResponse, Item, PlayerObj(..), PType(..), paramsResponseDecoder, resultResponseDecoder, ResultResponse(..))
+import WSDecoder exposing (ArtistObj, SongObj, ItemDetails, ParamsResponse, Item, PlayerObj(..), PType(..), paramsResponseDecoder, resultResponseDecoder, ResultResponse(..))
 import Request exposing (Params, Property(..), propertyToStr, paramsToObj, request)
 import Method exposing (Method(..), methodToStr, strToMethod)
 
@@ -130,11 +130,23 @@ update msg model =
           ( { model | messages = model.messages ++ List.map songname songlist }
           , Cmd.none
           )
+        ResultE artistlist ->
+          ( { model | messages = model.messages ++ List.map (\item -> item.label) artistlist }
+          , Cmd.none
+          )
+        ResultF albumlist ->
+          ( { model | messages = model.messages ++ List.map (\item -> item.label) albumlist }
+          , Cmd.none
+          )
+        ResultG movielist ->
+          ( { model | messages = model.messages ++ List.map (\item -> item.label) movielist }
+          , Cmd.none
+          )
 
-songname : Song -> String
+
+songname : SongObj -> String
 songname song =
   song.label
-
 
 -- SUBSCRIPTIONS
 decodeWS message = 

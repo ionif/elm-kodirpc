@@ -1,4 +1,4 @@
-module WSDecoder exposing (Song, ItemDetails, ParamsResponse, Item, PlayerObj(..), PType(..), paramsResponseDecoder, resultResponseDecoder, ResultResponse(..))
+module WSDecoder exposing (ArtistObj, SongObj, ItemDetails, ParamsResponse, Item, PlayerObj(..), PType(..), paramsResponseDecoder, resultResponseDecoder, ResultResponse(..))
 
 import Json.Decode as Decode exposing (Decoder, int, string, at, maybe, list)
 import Json.Decode.Pipeline exposing (custom, required, optional)
@@ -103,11 +103,18 @@ paramsResponseDecoder =
 -----------------------
 -- "result" response --
 -----------------------
-type ResultResponse = ResultA String | ResultB (List PlayerObj) | ResultC ItemDetails | ResultD (List Song)--| ResultD IntrospectObj
+type ResultResponse = ResultA String 
+                    | ResultB (List PlayerObj)
+                    | ResultC ItemDetails 
+                    | ResultD (List SongObj) --| ResultD IntrospectObj
+                    | ResultE (List ArtistObj)
+                    | ResultF (List AlbumObj)
+                    | ResultG (List MovieObj)
 
+--main decoder which tries everyone else
 resultResponseDecoder : Decoder ResultResponse
 resultResponseDecoder =
-    Decode.oneOf [stringDecoder, listDecoder, detailDecoder, songQueryDecoder]
+    Decode.oneOf [stringDecoder, listDecoder, detailDecoder, queryDecoder]
 
 stringDecoder : Decoder ResultResponse
 stringDecoder =
@@ -138,21 +145,83 @@ type alias ItemDetails =
     , thumbnail : String
     }
 
+--queries decoder
+queryDecoder : Decoder ResultResponse
+queryDecoder = 
+    Decode.oneOf [songQueryDecoder, artistQueryDecoder, albumQueryDecoder, movieQueryDecoder]
+
 songQueryDecoder : Decoder ResultResponse
 songQueryDecoder =
     Decode.succeed ResultD
         |> custom (at ["result", "songs"] (list songDecoder))
 
-songDecoder : Decoder Song
+songDecoder : Decoder SongObj
 songDecoder =
-    Decode.succeed Song
+    Decode.succeed SongObj
         |> required "label" string
         |> required "duration" int
+        |> required "thumbnail" string
 
-type alias Song =
+type alias SongObj =
     { label : String 
     , duration : Int 
+    , thumbnail : String
     }
+
+artistQueryDecoder : Decoder ResultResponse
+artistQueryDecoder =
+    Decode.succeed ResultE
+        |> custom (at ["result", "artists"] (list artistDecoder))
+
+artistDecoder : Decoder ArtistObj
+artistDecoder =
+    Decode.succeed ArtistObj
+        |> required "label" string
+        |> required "artistid" int
+        |> required "thumbnail" string
+
+type alias ArtistObj =
+    { label : String 
+    , albumid : Int
+    , thumbnail : String
+    }
+
+albumQueryDecoder : Decoder ResultResponse
+albumQueryDecoder =
+    Decode.succeed ResultF
+        |> custom (at ["result", "albums"] (list albumDecoder))
+
+albumDecoder : Decoder AlbumObj
+albumDecoder =
+    Decode.succeed AlbumObj
+        |> required "label" string
+        |> required "albumid" int
+        |> required "thumbnail" string
+
+type alias AlbumObj =
+    { label : String 
+    , albumid : Int
+    , thumbnail : String
+    }
+
+movieQueryDecoder : Decoder ResultResponse
+movieQueryDecoder =
+    Decode.succeed ResultG
+        |> custom (at ["result", "movies"] (list movieDecoder))
+
+movieDecoder : Decoder MovieObj
+movieDecoder =
+    Decode.succeed MovieObj
+        |> required "label" string
+        |> required "movieid" int
+        |> required "thumbnail" string
+
+type alias MovieObj =
+    { label : String 
+    , movieid : Int
+    , thumbnail : String
+    }
+
 {-introspectDecoder : Decoder ResultResponse
 introspectDecoder =
         Decode.succeed ResultC
