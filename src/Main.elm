@@ -135,7 +135,7 @@ update msg model =
           , Cmd.none
           )
         ResultF albumlist ->
-          ( { model | messages = model.messages ++ List.map (\item -> item.label) albumlist }
+          ( { model | messages = model.messages ++ List.map (\item -> item.thumbnail) albumlist }
           , Cmd.none
           )
         ResultG movielist ->

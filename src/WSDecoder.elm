@@ -159,13 +159,15 @@ songDecoder : Decoder SongObj
 songDecoder =
     Decode.succeed SongObj
         |> required "label" string
+        |> required "artist" (list string)
         |> required "duration" int
-        |> required "thumbnail" string
+        |> required "songid" int
 
 type alias SongObj =
     { label : String 
+    , artist : List String
     , duration : Int 
-    , thumbnail : String
+    , songid : Int
     }
 
 artistQueryDecoder : Decoder ResultResponse
