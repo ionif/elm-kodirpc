@@ -142,6 +142,10 @@ update msg model =
           ( { model | messages = model.messages ++ List.map (\item -> item.label) movielist }
           , Cmd.none
           )
+        ResultH percent ->
+          ( { model | messages = model.messages ++ [String.fromFloat(percent)] }
+          , Cmd.none
+          )
 
 
 songname : SongObj -> String
