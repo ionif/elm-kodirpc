@@ -1,6 +1,6 @@
 module WSDecoder exposing (ArtistObj, SongObj, ItemDetails, ParamsResponse, Item, PlayerObj(..), PType(..), paramsResponseDecoder, resultResponseDecoder, ResultResponse(..))
 
-import Json.Decode as Decode exposing (Decoder, int, string, at, maybe, list, float)
+import Json.Decode as Decode exposing (Decoder, int, string, at, maybe, list, float, bool)
 import Json.Decode.Pipeline exposing (custom, required, optional)
 import Method exposing (Method(..), methodToStr, strToMethod)
 
@@ -111,6 +111,9 @@ type ResultResponse = ResultA String
                     | ResultF (List AlbumObj)
                     | ResultG (List MovieObj)
                     | ResultH Float
+                    | ResultI (List SourceObj)
+                    | ResultJ Bool Float --muted/volume
+                    | ResultK (List FileObj)
 
 --main decoder which tries everyone else
 resultResponseDecoder : Decoder ResultResponse
@@ -149,7 +152,7 @@ type alias ItemDetails =
 --queries decoder
 queryDecoder : Decoder ResultResponse
 queryDecoder = 
-    Decode.oneOf [percentDecoder, songQueryDecoder, artistQueryDecoder, albumQueryDecoder, movieQueryDecoder]
+    Decode.oneOf [percentDecoder, songQueryDecoder, artistQueryDecoder, albumQueryDecoder, movieQueryDecoder, sourceQueryDecoder, volumeDecoder, fileQueryDecoder]
 
 songQueryDecoder : Decoder ResultResponse
 songQueryDecoder =
@@ -163,12 +166,15 @@ songDecoder =
         |> required "artist" (list string)
         |> required "duration" int
         |> required "songid" int
+        |> required "genre" (list string)
+
 
 type alias SongObj =
-    { label : String 
+    { label : String
     , artist : List String
-    , duration : Int 
+    , duration : Int
     , songid : Int
+    , genre : List String
     }
 
 artistQueryDecoder : Decoder ResultResponse
@@ -182,11 +188,13 @@ artistDecoder =
         |> required "label" string
         |> required "artistid" int
         |> required "thumbnail" string
+        |> required "genre" (list string)
 
 type alias ArtistObj =
     { label : String 
-    , albumid : Int
+    , artistid : Int
     , thumbnail : String
+    , genre : List String
     }
 
 albumQueryDecoder : Decoder ResultResponse
@@ -229,6 +237,69 @@ percentDecoder : Decoder ResultResponse
 percentDecoder =
     Decode.succeed ResultH
         |> custom (at ["result", "percentage"] float)
+
+sourceQueryDecoder : Decoder ResultResponse
+sourceQueryDecoder =
+    Decode.succeed ResultI
+        |> custom (at [ "result", "sources" ] (list sourceDecoder))
+
+
+sourceDecoder : Decoder SourceObj
+sourceDecoder =
+    Decode.succeed SourceObj
+        |> required "label" string
+        |> required "file" string
+
+
+type alias SourceObj =
+    { label : String
+    , file : String
+    }
+
+volumeDecoder : Decoder ResultResponse
+volumeDecoder =
+    Decode.succeed ResultJ
+        |> custom (at [ "result", "muted" ] bool)
+        |> custom (at [ "result", "volume" ] float)
+
+fileQueryDecoder : Decoder ResultResponse
+fileQueryDecoder =
+    Decode.succeed ResultK
+        |> custom (at [ "result", "files" ] (list fileDecoder))
+
+type alias FileObj =
+    { label : String
+    , file : String
+    , filetype : FileType
+    }
+
+fileDecoder : Decoder FileObj
+fileDecoder =
+    Decode.succeed FileObj
+        |> required "label" string
+        |> required "file" string
+        |> required "filetype" fileTypeDecoder
+
+-- file Type
+type FileType
+    = Directory
+    | File
+
+parseFileType : String -> Result String FileType
+parseFileType string =
+    case string of
+        "directory" ->
+            Ok Directory
+
+        "file" ->
+            Ok File
+
+        _ ->
+            Err ("Invalid filetype: " ++ string)
+
+fileTypeDecoder : Decoder FileType
+fileTypeDecoder =
+    Decode.string |> Decode.andThen (fromResult << parseFileType)
 
 {-introspectDecoder : Decoder ResultResponse
 introspectDecoder =

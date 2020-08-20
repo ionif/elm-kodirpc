@@ -127,11 +127,11 @@ update msg model =
           ( { model | currentlyPlaying = item}
           , Cmd.none)
         ResultD songlist ->
-          ( { model | messages = model.messages ++ List.map songname songlist }
+          ( { model | messages = model.messages ++ List.concatMap (\song -> song.genre) songlist }
           , Cmd.none
           )
         ResultE artistlist ->
-          ( { model | messages = model.messages ++ List.map (\item -> item.label) artistlist }
+          ( { model | messages = model.messages ++ List.concatMap (\item -> item.genre) artistlist }
           , Cmd.none
           )
         ResultF albumlist ->
@@ -146,11 +146,30 @@ update msg model =
           ( { model | messages = model.messages ++ [String.fromFloat(percent)] }
           , Cmd.none
           )
+        ResultI sourcelist ->
+          ( { model | messages = model.messages ++ List.map (\item -> item.file) sourcelist }
+          , Cmd.none
+          )
+        ResultJ muted volume ->
+          case muted of
+            False ->
+              ( { model | messages = model.messages ++ [ (String.fromFloat volume) ++ ", " ++ "False" ] }
+              , Cmd.none
+              )
+            True -> 
+              ( { model | messages = model.messages ++ [ (String.fromFloat volume) ++ ", " ++ "True" ] }
+              , Cmd.none
+              )
+        ResultK filelist ->
+          ( { model | messages = model.messages ++ List.map (\item -> item.label) filelist }
+          , Cmd.none
+          )
 
 
 songname : SongObj -> String
 songname song =
   song.label
+
 
 -- SUBSCRIPTIONS
 decodeWS message = 
