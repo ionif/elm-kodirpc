@@ -16,7 +16,8 @@ elm reactor
   - {"result" : String}
 - [ ] JSON Introspect decoder
   - handles Introspect calls
-- [ ] params decoder
+- [X] params decoder
   - {"params" : Object}
 - [ ] List decoder
   - {"result" : [{},{}]}
+- [X] handles every [Kodi JSONRPC example](https://kodi.wiki/view/JSON-RPC_API/Examples)
